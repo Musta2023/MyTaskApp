@@ -1,0 +1,19 @@
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+/* Smooth card rounding */
+.card {
+  border-radius: 0.9rem;
+}
+
+/* Slightly softer background for main area */
+.bg-body-tertiary {
+  background: linear-gradient(
+    135deg,
+    #f4f6fb 0%,
+    #f8fafc 40%,
+    #f5f7ff 100%
+  );
+}

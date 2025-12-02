@@ -1,0 +1,49 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/         
+
+# Environment & secrets
+.env           
+*.env          
+.env.*         
+
+# Databases (keep migrations, ignore local SQLite DBs)
+*.db
+*.sqlite
+*.sqlite3
+
+# Flask
+instance/
+*.log
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+coverage/
+htmlcov/
+
+# Tool caches
+.mypy_cache/
+.pytype/
+ruff_cache/
+.dmypy.json
+
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# Editors/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Node (if you have any frontend in the project)
+node_modules/

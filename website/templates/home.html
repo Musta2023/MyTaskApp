@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · MyTasks{% endblock %}
+
+{% block content %}
+{% if notes is not defined %}
+{% set notes = user.notes if user and user.notes is defined else [] %}
+{% endif %}
+{% set stats = namespace(planned=0, in_progress=0, completed=0, canceled=0) %}
+{% for n in notes %}
+  {% set st = n.status if n.status is defined and n.status else 'planned' %}
+  {% if st == 'planned' %}
+    {% set stats.planned = stats.planned + 1 %}
+  {% elif st == 'in_progress' %}
+    {% set stats.in_progress = stats.in_progress + 1 %}
+  {% elif st == 'completed' %}
+    {% set stats.completed = stats.completed + 1 %}
+  {% elif st == 'canceled' %}
+    {% set stats.canceled = stats.canceled + 1 %}
+  {% endif %}
+{% endfor %}
+
+<!-- Header + Stats -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div>
+    <h1 class="h2 mb-1">Dashboard</h1>
+    <p class="text-tertiary mb-0" style="font-size: 0.875rem;">{{ notes|length }} task{{ 's' if notes|length != 1 else '' }} in total</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card card-elevated stat-card">
+      <div class="card-body py-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="stat-dot bg-secondary"></span>
+              <span class="text-tertiary" style="font-size: 0.8125rem; font-weight: 500;">Planned</span>
+            </div>
+            <span class="h4 mb-0" style="font-weight: 700; color: var(--color-text-primary);">{{ stats.planned }}</span>
+          </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-elevated stat-card">
+      <div class="card-body py-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="stat-dot bg-primary"></span>
+              <span class="text-tertiary" style="font-size: 0.8125rem; font-weight: 500;">In progress</span>
+            </div>
+            <span class="h4 mb-0" style="font-weight: 700; color: var(--color-text-primary);">{{ stats.in_progress }}</span>
+          </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-elevated stat-card">
+      <div class="card-body py-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="stat-dot bg-success"></span>
+              <span class="text-tertiary" style="font-size: 0.8125rem; font-weight: 500;">Completed</span>
+            </div>
+            <span class="h4 mb-0" style="font-weight: 700; color: var(--color-text-primary);">{{ stats.completed }}</span>
+          </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-elevated stat-card">
+      <div class="card-body py-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="stat-dot bg-danger"></span>
+              <span class="text-tertiary" style="font-size: 0.8125rem; font-weight: 500;">Canceled</span>
+            </div>
+            <span class="h4 mb-0" style="font-weight: 700; color: var(--color-text-primary);">{{ stats.canceled }}</span>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card card-elevated mb-4">
+  <div class="card-body">
+    <form method="GET" action="{{ url_for('view.home') }}" class="row gy-3 gx-3 align-items-end">
+      <div class="col-12 col-sm-6 col-md-3">
+        <label for="from" class="form-label" style="display: flex; align-items: center; gap: 0.375rem;">
+          <i class="bi bi-calendar3" style="font-size: 0.875rem; color: var(--color-text-tertiary);"></i>
+          <span>From</span>
+        </label>
+        <input type="date" class="form-control rounded-3" id="from" name="from" value="{{ from_date or '' }}">
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <label for="to" class="form-label" style="display: flex; align-items: center; gap: 0.375rem;">
+          <i class="bi bi-calendar3" style="font-size: 0.875rem; color: var(--color-text-tertiary);"></i>
+          <span>To</span>
+        </label>
+        <input type="date" class="form-control rounded-3" id="to" name="to" value="{{ to_date or '' }}">
+      </div>
+      <div class="col-12 col-md-6 d-flex gap-2 justify-content-start justify-content-md-end">
+        <button type="submit" class="btn btn-dark rounded-3"><i class="bi bi-funnel"></i>Apply</button>
+        <a href="{{ url_for('view.home') }}" class="btn btn-outline-secondary rounded-3">Reset</a>
+      </div>
+      <div class="col-12 mt-2">
+        <div class="d-flex flex-wrap gap-2 filter-pills">
+          <a href="{{ url_for('view.home') }}"
+             class="btn btn-filter{% if not status_filter %} active{% endif %}">All</a>
+          <a href="{{ url_for('view.home') }}?status=planned"
+             class="btn btn-filter{% if status_filter == 'planned' %} active{% endif %}">Planned</a>
+          <a href="{{ url_for('view.home') }}?status=in_progress"
+             class="btn btn-filter{% if status_filter == 'in_progress' %} active{% endif %}">In progress</a>
+          <a href="{{ url_for('view.home') }}?status=completed"
+             class="btn btn-filter{% if status_filter == 'completed' %} active{% endif %}">Completed</a>
+          <a href="{{ url_for('view.home') }}?status=canceled"
+             class="btn btn-filter{% if status_filter == 'canceled' %} active{% endif %}">Canceled</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-4 align-items-stretch">
+  <!-- Add Note -->
+  <div class="col-12 col-lg-5">
+    <div class="card card-elevated h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+          <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-plus-circle" style="color: var(--color-primary);"></i>
+            <span style="font-weight: 600;">Add a new task</span>
+          </h2>
+          <span class="badge text-bg-light border" style="color: var(--color-text-tertiary); font-weight: 500;">
+            <i class="bi bi-lightning-charge-fill" style="color: #f59e0b;"></i>
+            Quick jot
+          </span>
+        </div>
+
+        <form method="POST" action="{{ url_for('view.home') }}">
+          <div class="mb-3">
+            <label for="note" class="form-label">Task description</label>
+            <textarea class="form-control rounded-3" id="note" name="note" rows="5" placeholder="What do you want to accomplish?" required></textarea>
+          </div>
+          <div class="mb-4">
+            <label for="pomodoro_minutes" class="form-label">Pomodoro duration</label>
+            <input type="number" class="form-control rounded-3" id="pomodoro_minutes" name="pomodoro_minutes" min="1" max="300" value="25" placeholder="25" />
+            <div class="form-text">Set focus session length in minutes (default: 25).</div>
+          </div>
+          <div class="mb-4">
+            <label for="finish_by" class="form-label">Finish by (optional)</label>
+            <input type="datetime-local" class="form-control rounded-3" id="finish_by" name="finish_by" />
+            <div class="form-text">Either set minutes or choose a finish date/time. If both are set, finish by takes precedence.</div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-dark rounded-3">
+              <i class="bi bi-plus-lg"></i>
+              <span>Save task</span>
+            </button>
+            <button type="reset" class="btn btn-outline-secondary rounded-3">Clear</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes List -->
+  <div class="col-12 col-lg-7">
+    <div class="card card-elevated h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+          <h2 class="h5 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-list-task" style="color: var(--color-primary);"></i>
+            <span style="font-weight: 600;">Your tasks</span>
+          </h2>
+          <span class="badge text-bg-light border" style="color: var(--color-text-secondary); font-weight: 600;">{{ notes|length }}</span>
+        </div>
+
+        {% if notes %}
+          <ul class="list-group" id="notes">
+            {% for note in notes|sort(attribute='id', reverse=True) %}
+              {% set st = note.status if note.status is defined and note.status else 'planned' %}
+              {% set st_label = 'Planned' %}
+              {% if st == 'in_progress' %}{% set st_label = 'In progress' %}
+              {% elif st == 'completed' %}{% set st_label = 'Completed' %}
+              {% elif st == 'canceled' %}{% set st_label = 'Canceled' %}
+              {% endif %}
+
+              <li class="list-group-item d-flex align-items-start justify-content-between gap-3">
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <span class="badge badge-status
+                      {% if st == 'in_progress' %} in-progress
+                      {% elif st == 'completed' %} completed
+                      {% elif st == 'canceled' %} canceled
+                      {% else %} planned
+                      {% endif %}">
+                      {{ st_label }}
+                    </span>
+                    <span class="text-tertiary" style="font-size: 0.75rem; font-weight: 600;">#{{ note.id }}</span>
+                  </div>
+                  <div class="note-content text-wrap mb-2">{{ note.data }}</div>
+                  <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+                    <small class="text-tertiary" style="font-size: 0.8125rem; display: flex; align-items: center; gap: 0.25rem;">
+                      <i class="bi bi-clock" style="font-size: 0.75rem;"></i>
+                      {% if note.created_at is defined and note.created_at %}
+                        {{ note.created_at.strftime("%b %d, %Y · %H:%M") }}
+                      {% elif note.date is defined and note.date %}
+                        {{ note.date.strftime("%b %d, %Y · %H:%M") }}
+                      {% else %}
+                        N/A
+                      {% endif %}
+                    </small>
+                    <span class="text-tertiary" style="font-size: 0.8125rem; font-weight: 500;">· Sessions: {{ note.pomodoros }}</span>
+                  </div>
+                  
+                  <!-- Pomodoro Progress Bar -->
+                  <div class="pomodoro-progress-container" data-task-id="{{ note.id }}"{% if note.finish_by is defined and note.finish_by %} data-default-finish-at="{{ note.finish_by.isoformat() }}"{% endif %}>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <span class="pomodoro-label text-tertiary" style="font-size: 0.8125rem; font-weight: 500;">
+                        Focus Session
+                      </span>
+                      <span class="pomodoro-timer text-secondary" style="font-size: 0.875rem; font-weight: 600; font-variant-numeric: tabular-nums;">
+                        {{ "%02d"|format(((note.pomodoro_seconds|default(1500, true)) // 60)) }}:00
+                      </span>
+                    </div>
+                    <div class="pomodoro-progress-track mb-2">
+                      <div class="pomodoro-progress-fill" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm rounded-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="bi bi-flag"></i>
+                      <span>Status</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="#" onclick="updateStatus({{ note.id|tojson }}, 'planned')"><span class="badge badge-status planned me-2">Planned</span></a></li>
+                      <li><a class="dropdown-item" href="#" onclick="updateStatus({{ note.id|tojson }}, 'in_progress')"><span class="badge badge-status in-progress me-2">In progress</span></a></li>
+                      <li><a class="dropdown-item" href="#" onclick="updateStatus({{ note.id|tojson }}, 'completed')"><span class="badge badge-status completed me-2">Completed</span></a></li>
+                      <li><a class="dropdown-item" href="#" onclick="updateStatus({{ note.id|tojson }}, 'canceled')"><span class="badge badge-status canceled me-2">Canceled</span></a></li>
+                    </ul>
+                  </div>
+                  <button type="button" class="btn btn-outline-primary btn-sm rounded-3" onclick="startPomodoro({{ note.id|tojson }}, {{ ((note.pomodoro_seconds|default(1500, true)) // 60)|tojson }})" data-note-id-start="{{ note.id }}">
+                    <i class="bi bi-play-circle"></i>
+                    <span>Start</span>
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm rounded-3 d-none" onclick="pausePomodoro({{ note.id|tojson }})" data-note-id-pause="{{ note.id }}">
+                    <i class="bi bi-pause-circle"></i>
+                    <span>Pause</span>
+                  </button>
+                  <button type="button" class="btn btn-outline-success btn-sm rounded-3 d-none" onclick="completePomodoro({{ note.id|tojson }})" data-note-id-complete="{{ note.id }}">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Complete</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm icon-btn"
+                    data-note-id="{{ note.id }}"
+                    data-note-text="{{ note.data|e }}"
+                    data-note-minutes="{{ (note.pomodoro_seconds // 60) if note.pomodoro_seconds is defined and note.pomodoro_seconds else 25 }}"
+                    onclick="openEditModal(this.dataset.noteId, this.dataset.noteText, this.dataset.noteMinutes)"
+                    aria-label="Edit task"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button type="button" class="btn btn-outline-danger btn-sm icon-btn" onclick="deleteNote({{ note.id|tojson }})" aria-label="Delete task">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <!-- Empty state -->
+          <div class="text-center py-5">
+            <div class="empty-illustration mb-3">
+              <i class="bi bi-inbox"></i>
+            </div>
+            <h3 class="h5 mb-2" style="color: var(--color-text-primary);">No tasks yet</h3>
+            <p class="text-tertiary mb-4" style="font-size: 0.875rem;">Get started by creating your first task below.</p>
+            <a class="btn btn-dark rounded-3" href="#note">
+              <i class="bi bi-plus-lg"></i>
+              <span>Add your first task</span>
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Task Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-3">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Edit task</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit_note_id" />
+        <div class="mb-3">
+          <label for="edit_note_text" class="form-label">Task</label>
+          <textarea class="form-control rounded-3" id="edit_note_text" rows="5" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="edit_pomodoro_minutes" class="form-label">Pomodoro duration (minutes)</label>
+          <input type="number" class="form-control rounded-3" id="edit_pomodoro_minutes" min="1" max="300" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-dark rounded-3" onclick="submitEditModal()">
+          <i class="bi bi-save me-1"></i> Save changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
