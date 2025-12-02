@@ -1,0 +1,9 @@
+{
+  "name": "mytasks-app",
+  "private": true,
+  "scripts": {
+    "start": "python3 main.py",
+    "vercel-build": "pip install -r requirements.txt"
+  },
+  "dependencies": {}
+}
